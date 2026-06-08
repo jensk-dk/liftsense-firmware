@@ -4,4 +4,9 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(liftsense_firmware)
 
-target_sources(app PRIVATE src/main.c)
+target_sources(app PRIVATE 
+    src/main.c
+    src/imu.c
+    src/ble.c
+    src/sensor_math.c
+)
