@@ -38,14 +38,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /opt/zephyr-sdk
-        key: zephyr-sdk-0.16.5-linux-x86_64
+        key: zephyr-sdk-1.0.1-linux-x86_64
 
     - name: Download and install Zephyr SDK
       if: steps.cache-zephyr-sdk.outputs.cache-hit != 'true'
       run: |
-        wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64.tar.xz
-        tar xf zephyr-sdk-0.16.5_linux-x86_64.tar.xz
-        sudo mv zephyr-sdk-0.16.5 /opt/zephyr-sdk
+        wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v1.0.1/zephyr-sdk-1.0.1_linux-x86_64_minimal.tar.xz
+        tar xf zephyr-sdk-1.0.1_linux-x86_64_minimal.tar.xz
+        sudo mv zephyr-sdk-1.0.1 /opt/zephyr-sdk
         cd /opt/zephyr-sdk
         sudo ./setup.sh -t arm-zephyr-eabi -h -c
 
@@ -70,7 +70,7 @@ jobs:
           zephyrproject/bootloader
           zephyrproject/modules
           zephyrproject/tools
-        key: zephyr-${{ hashFiles('liftsense-firmware/west.yml') }}
+        key: zephyr-main-${{ hashFiles('liftsense-firmware/west.yml') }}
 
     - name: Initialize Zephyr workspace
       if: steps.cache-zephyr.outputs.cache-hit != 'true'
@@ -112,7 +112,7 @@ jobs:
         echo "### Build Information" >> $GITHUB_STEP_SUMMARY
         echo "- **Board:** XIAO BLE nRF52840 Sense" >> $GITHUB_STEP_SUMMARY
         echo "- **Zephyr:** main branch" >> $GITHUB_STEP_SUMMARY
-        echo "- **SDK:** Zephyr SDK 0.16.5" >> $GITHUB_STEP_SUMMARY
+        echo "- **SDK:** Zephyr SDK 1.0.1" >> $GITHUB_STEP_SUMMARY
         echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         if [ -f zephyrproject/build/zephyr/zephyr.stat ]; then
