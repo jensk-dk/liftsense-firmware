@@ -11,6 +11,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    env:
+      ZEPHYR_SDK_INSTALL_DIR: /opt/zephyr-sdk
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -34,23 +37,23 @@ jobs:
       id: cache-zephyr-sdk
       uses: actions/cache@v4
       with:
-        path: ~/zephyr-sdk-0.16.8
-        key: zephyr-sdk-0.16.8-linux-x86_64
+        path: /opt/zephyr-sdk
+        key: zephyr-sdk-0.16.5-linux-x86_64
 
     - name: Download and install Zephyr SDK
       if: steps.cache-zephyr-sdk.outputs.cache-hit != 'true'
       run: |
-        cd ~
-        wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz
-        tar xf zephyr-sdk-0.16.8_linux-x86_64.tar.xz
-        cd zephyr-sdk-0.16.8
-        ./setup.sh -t arm-zephyr-eabi -h -c
+        wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64.tar.xz
+        tar xf zephyr-sdk-0.16.5_linux-x86_64.tar.xz
+        sudo mv zephyr-sdk-0.16.5 /opt/zephyr-sdk
+        cd /opt/zephyr-sdk
+        sudo ./setup.sh -t arm-zephyr-eabi -h -c
 
     - name: Register Zephyr SDK (if cached)
       if: steps.cache-zephyr-sdk.outputs.cache-hit == 'true'
       run: |
-        cd ~/zephyr-sdk-0.16.8
-        ./setup.sh -t arm-zephyr-eabi -h -c
+        cd /opt/zephyr-sdk
+        sudo ./setup.sh -t arm-zephyr-eabi -h -c
 
     - name: Install West and Python packages
       run: |
@@ -109,7 +112,7 @@ jobs:
         echo "### Build Information" >> $GITHUB_STEP_SUMMARY
         echo "- **Board:** XIAO BLE nRF52840 Sense" >> $GITHUB_STEP_SUMMARY
         echo "- **Zephyr:** main branch" >> $GITHUB_STEP_SUMMARY
-        echo "- **SDK:** Zephyr SDK 0.16.8" >> $GITHUB_STEP_SUMMARY
+        echo "- **SDK:** Zephyr SDK 0.16.5" >> $GITHUB_STEP_SUMMARY
         echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         if [ -f zephyrproject/build/zephyr/zephyr.stat ]; then
