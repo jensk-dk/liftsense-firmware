@@ -7,9 +7,21 @@
 #include "ble.h"
 #include "sensor_math.h"
 #include "imu_packet.h"
+#include "battery.h"
 
 static struct imu_packet imu_data;
 static uint32_t last_filter_time_ms;
+
+/* Battery sample callback - updates BLE Battery Service */
+static void battery_sample_handler(uint16_t millivolt)
+{
+    uint8_t percentage;
+    int ret = battery_get_percentage(&percentage, millivolt);
+    if (ret == 0) {
+        ble_update_battery_level(percentage);
+        printk("Battery: %d mV (%d%%)\n", millivolt, percentage);
+    }
+}
 
 int main(void)
 {
@@ -33,6 +45,17 @@ int main(void)
     /* Set up IMU trigger */
     if (imu_setup_trigger(NULL) < 0) {
         return -1;
+    }
+
+    /* Initialize battery management */
+    if (battery_init() == 0) {
+        /* Register callback for battery samples */
+        battery_register_sample_callback(battery_sample_handler);
+        
+        /* Start periodic battery sampling every 30 seconds */
+        battery_start_sampling(30000);
+    } else {
+        printk("Battery init failed - continuing without battery monitoring\n");
     }
 
     /* Calibrate gravity vector */

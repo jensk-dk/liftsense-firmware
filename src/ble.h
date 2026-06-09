@@ -16,4 +16,7 @@ int ble_notify_imu_data(const struct imu_packet *data);
 /* Check if BLE notifications are enabled */
 bool ble_is_notify_enabled(void);
 
+/* Update battery level (0-100%) for Battery Service */
+int ble_update_battery_level(uint8_t level);
+
 #endif /* BLE_H */

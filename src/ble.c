@@ -8,6 +8,9 @@
 static struct imu_packet imu_data;
 static bool notify_enabled;
 
+/* Battery level (0-100%) for standard Battery Service */
+static uint8_t battery_level = 100;
+
 /* BLE Service UUIDs */
 /* LiftSense IMU Service: a0f1f001-5b25-4f91-a8e3-2c6d9f7b3e4a */
 #define BT_UUID_IMU_SERVICE_VAL \
@@ -43,6 +46,16 @@ static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
     BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
 };
+
+/* Standard Battery Service (0x180F) */
+BT_GATT_SERVICE_DEFINE(bas,
+    BT_GATT_PRIMARY_SERVICE(BT_UUID_BAS),
+    BT_GATT_CHARACTERISTIC(BT_UUID_BAS_BATTERY_LEVEL,
+                          BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+                          BT_GATT_PERM_READ,
+                          NULL, NULL, &battery_level),
+    BT_GATT_CCC(NULL, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE)
+);
 
 int ble_init(void)
 {
@@ -104,4 +117,16 @@ int ble_notify_imu_data(const struct imu_packet *data)
 bool ble_is_notify_enabled(void)
 {
     return notify_enabled;
+}
+
+int ble_update_battery_level(uint8_t level)
+{
+    if (level > 100) {
+        level = 100;
+    }
+    
+    battery_level = level;
+    
+    /* Notify if anyone is subscribed to battery level */
+    return bt_gatt_notify(NULL, &bas.attrs[1], &battery_level, sizeof(battery_level));
 }

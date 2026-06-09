@@ -1,0 +1,16 @@
+LiftSense Firmware
+Copyright 2026 [Jens Kristian Jensen]
+
+This product includes software developed at:
+- The LiftSense Project
+
+This product includes software from:
+- XIAO BLE Battery Management Library
+  Copyright 2024 Marcus Alexander Tjomsaas
+  Licensed under the Apache License, Version 2.0
+  https://github.com/Tjoms99/xiao_sense_nrf52840_battery_lib
+
+- Zephyr Project
+  Copyright (c) The Linux Foundation
+  Licensed under the Apache License, Version 2.0
+  https://www.zephyrproject.org/
