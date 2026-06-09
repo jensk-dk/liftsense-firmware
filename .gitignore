@@ -1,4 +1,32 @@
+# Build artifacts
 build/
+*.elf
+*.bin
+*.hex
+*.uf2
+*.map
+
+# Editor/IDE
 .vscode/
+.idea/
 *.swp
+*.swo
+*~
+
+# Logs
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Zephyr
+.west/
+zephyr-sdk*/

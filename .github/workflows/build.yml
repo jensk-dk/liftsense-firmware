@@ -1,0 +1,116 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: liftsense-firmware
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          git cmake ninja-build gperf ccache dfu-util \
+          device-tree-compiler wget xz-utils file make gcc \
+          gcc-multilib g++-multilib libsdl2-dev libmagic1
+
+    - name: Cache Zephyr SDK
+      id: cache-zephyr-sdk
+      uses: actions/cache@v4
+      with:
+        path: ~/zephyr-sdk-0.17.0
+        key: zephyr-sdk-0.17.0-linux-x86_64
+
+    - name: Download and install Zephyr SDK
+      if: steps.cache-zephyr-sdk.outputs.cache-hit != 'true'
+      run: |
+        cd ~
+        wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/zephyr-sdk-0.17.0_linux-x86_64.tar.xz
+        tar xf zephyr-sdk-0.17.0_linux-x86_64.tar.xz
+        cd zephyr-sdk-0.17.0
+        ./setup.sh -t arm-zephyr-eabi -h -c
+
+    - name: Install West and Python packages
+      run: |
+        pip install --upgrade pip
+        pip install west
+
+    - name: Cache Zephyr workspace
+      id: cache-zephyr
+      uses: actions/cache@v4
+      with:
+        path: |
+          zephyrproject/.west
+          zephyrproject/zephyr
+          zephyrproject/bootloader
+          zephyrproject/modules
+          zephyrproject/tools
+        key: zephyr-${{ hashFiles('liftsense-firmware/west.yml') }}
+
+    - name: Initialize Zephyr workspace
+      if: steps.cache-zephyr.outputs.cache-hit != 'true'
+      run: |
+        west init -m https://github.com/zephyrproject-rtos/zephyr --mr main zephyrproject
+        cd zephyrproject
+        west update
+        west zephyr-export
+        pip install -r zephyr/scripts/requirements.txt
+
+    - name: Install Zephyr requirements (if cached)
+      if: steps.cache-zephyr.outputs.cache-hit == 'true'
+      run: |
+        cd zephyrproject
+        pip install -r zephyr/scripts/requirements.txt
+
+    - name: Build firmware
+      run: |
+        export ZEPHYR_SDK_INSTALL_DIR=~/zephyr-sdk-0.17.0
+        cd zephyrproject
+        west build -b xiao_ble/nrf52840/sense ../liftsense-firmware
+
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: liftsense-firmware-${{ github.sha }}
+        path: |
+          zephyrproject/build/zephyr/zephyr.uf2
+          zephyrproject/build/zephyr/zephyr.elf
+          zephyrproject/build/zephyr/zephyr.hex
+          zephyrproject/build/zephyr/zephyr.bin
+        retention-days: 30
+
+    - name: Build summary
+      run: |
+        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Firmware built successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Board:** XIAO BLE nRF52840 Sense" >> $GITHUB_STEP_SUMMARY
+        echo "- **Zephyr:** main branch" >> $GITHUB_STEP_SUMMARY
+        echo "- **SDK:** Zephyr SDK 0.17.0" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f zephyrproject/build/zephyr/zephyr.stat ]; then
+          echo "### Memory Usage" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat zephyrproject/build/zephyr/zephyr.stat >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi

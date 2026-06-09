@@ -1,5 +1,7 @@
 # LiftSense Firmware
 
+[![Build Firmware](https://github.com/YOUR_USERNAME/liftsense-firmware/actions/workflows/build.yml/badge.svg)](https://github.com/YOUR_USERNAME/liftsense-firmware/actions/workflows/build.yml)
+
 Zephyr-based firmware for LiftSense IMU + BLE barbell velocity sensor.
 
 ## Overview
@@ -178,6 +180,23 @@ cp ~/zephyrproject/build/zephyr/zephyr.uf2 /media/$USER/XIAO-SENSE/
 ```
 
 Or use `west flash` if you have a SWD debugger connected.
+
+---
+
+## Continuous Integration
+
+This project uses GitHub Actions to automatically build and test the firmware on every commit.
+
+**What the CI does:**
+- ✅ Installs Zephyr RTOS and dependencies
+- ✅ Downloads and configures Zephyr SDK (ARM toolchain)
+- ✅ Builds the firmware for XIAO BLE nRF52840 Sense
+- ✅ Generates build artifacts (UF2, ELF, HEX)
+- ✅ Reports memory usage statistics
+
+**Build artifacts** are available for download from the GitHub Actions page for 30 days after each successful build.
+
+To view build status, check the badge at the top of this README or visit the [Actions tab](../../actions).
 
 ---
 
